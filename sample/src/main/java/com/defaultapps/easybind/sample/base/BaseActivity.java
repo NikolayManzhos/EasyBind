@@ -7,8 +7,12 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.deafaultapps.easybind.EasyBind;
 import com.deafaultapps.easybind.EasyBinder;
+import com.defaultapps.easybind.bindings.BindLayout;
 
 public abstract class BaseActivity extends AppCompatActivity {
+
+    @BindLayout
+    int layoutId;
 
     private EasyBinder easyBinder;
 
@@ -17,6 +21,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         easyBinder = EasyBind.bind(this);
         easyBinder.onAttach();
+        setContentView(layoutId);
     }
 
     @Override
