@@ -1,10 +1,11 @@
-package com.defaultapps.easybind.sample;
+package com.defaultapps.easybind.sample.main;
 
 import android.os.Bundle;
 import android.widget.Button;
 
 import com.defaultapps.easybind.bindings.BindNavigator;
 import com.defaultapps.easybind.bindings.BindPresenter;
+import com.defaultapps.easybind.sample.R;
 import com.defaultapps.easybind.sample.base.BaseActivity;
 import com.defaultapps.easybind.sample.base.BasePresenter;
 
