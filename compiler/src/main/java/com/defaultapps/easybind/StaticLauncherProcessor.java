@@ -5,6 +5,8 @@ import com.defaultapps.easybind.bindings.BindPresenter;
 import com.defaultapps.easybind.bindings.BindRecyclerAdapter;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
+import com.defaultapps.easybind.calls.OnStart;
+import com.defaultapps.easybind.calls.OnStop;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
@@ -24,6 +26,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -33,6 +36,11 @@ public class StaticLauncherProcessor extends AbstractProcessor {
 
     private final Messager messager = new Messager();
     private Filer filer;
+
+    private Map<String, String> onAttachClassesToMethodsName;
+    private Map<String, String> onDetachClassesToMethodsName;
+    private Map<String, String> onStartClassesToMethodsName;
+    private Map<String, String> onStopClassesToMethodsName;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -57,56 +65,27 @@ public class StaticLauncherProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        Map<String, String> onAttachClassesToMethodsName = isSingleMethodAnnotationInClass(OnAttach.class, roundEnvironment);
-        Map<String, String> onDetachClassesToMethodsName = isSingleMethodAnnotationInClass(OnDetach.class, roundEnvironment);
-        messager.warn(null, "OnAttach classes: " + onAttachClassesToMethodsName.keySet().toString());
-        messager.warn(null, "OnDetach classes: " + onDetachClassesToMethodsName.keySet().toString());
+        onAttachClassesToMethodsName = getAnnotatedMethodsForClasses(OnAttach.class, roundEnvironment);
+        onDetachClassesToMethodsName = getAnnotatedMethodsForClasses(OnDetach.class, roundEnvironment);
+        onStartClassesToMethodsName = getAnnotatedMethodsForClasses(OnStart.class, roundEnvironment);
+        onStopClassesToMethodsName = getAnnotatedMethodsForClasses(OnStop.class, roundEnvironment);
+        Map<String, CodeGenerator> classesToGenerate = new HashMap<>();
 
         for (Element presenterBindingElement : roundEnvironment.getElementsAnnotatedWith(BindPresenter.class)) {
             VariableElement variableElement = (VariableElement) presenterBindingElement;
             if (!isValidField(variableElement)) {
                 messager.error(variableElement,
                         "Field annotated with %s must have DEFAULT or PUBLIC access modifier, current is: ",
-                        BindPresenter.class);
+                        BindPresenter.class.getSimpleName());
                 return true;
             }
 
-            TypeElement presenterClassType = null;
-            Set<? extends Element> presenterElements = roundEnvironment.getElementsAnnotatedWith(PresenterClass.class);
-            if (presenterElements.size() > 1) messager.error(variableElement, "Only single @PresenterClass annotation is allowed, %d", presenterElements.size());
-            else if (presenterElements.isEmpty()) messager.error(variableElement, "Annotate BasePresenter with @PresenterClass annotation");
-            else {
-                presenterClassType = (TypeElement) presenterElements.iterator().next();
-                messager.warn(presenterClassType, "Single annotation detected");
-            }
+            TypeElement presenterClassType = verifyClassAnnotation(PresenterClass.class, roundEnvironment, variableElement);
 
             TypeElement typeElement = (TypeElement) variableElement.getEnclosingElement();
-            messager.warn(variableElement, "Type of presenter, %s", (variableElement.asType()).toString());
-            messager.warn(variableElement, "Type of class, %s", typeElement.toString());
             PackageElement packageElement = (PackageElement) variableElement.getEnclosingElement().getEnclosingElement();
 
-
-            TypeSpec typeSpec = generateClasses(typeElement,
-                    variableElement.getSimpleName().toString(),
-                    presenterClassType,
-                    onAttachClassesToMethodsName);
-
-            messager.warn(packageElement, packageElement.getQualifiedName().toString());
-            messager.warn(presenterClassType, "OnAttach Name From Map, %s",
-                    onDetachClassesToMethodsName.get(presenterClassType.getQualifiedName().toString()));
-            JavaFile javaFile = JavaFile.builder(packageElement.getQualifiedName().toString(), typeSpec)
-                    .build();
-            try {
-                javaFile.writeTo(filer);
-            } catch (IOException e) {
-                throw new RuntimeException("Error writing file");
-        }
-
-            //Check if where is only single method annotated with this kind of annotations
-//            messager.warn(presenterBindingElement, "Count Attach %d", roundEnvironment.getElementsAnnotatedWith(OnAttach.class).size());
-//            messager.warn(presenterBindingElement, "Count Detach %d", roundEnvironment.getElementsAnnotatedWith(OnDetach.class).size());
-//            isSingleMethodAnnotationInClass(OnAttach.class, roundEnvironment);
-//            isSingleMethodAnnotationInClass(OnDetach.class, roundEnvironment);
+            generateCode(classesToGenerate, typeElement, packageElement, presenterClassType, variableElement);
         }
 
         for (Element annotatedElement : roundEnvironment.getElementsAnnotatedWith(BindNavigator.class)) {
@@ -114,9 +93,16 @@ public class StaticLauncherProcessor extends AbstractProcessor {
             if (!isValidField(variableElement)) {
                 messager.error(variableElement,
                         "Field annotated with %s must have DEFAULT or PUBLIC access modifier, current is: ",
-                        BindRecyclerAdapter.class.getName());
+                        BindNavigator.class.getSimpleName());
                 return true;
             }
+
+            TypeElement navigatorClassType = verifyClassAnnotation(NavigatorClass.class, roundEnvironment, variableElement);
+
+            TypeElement typeElement = (TypeElement) variableElement.getEnclosingElement();
+            PackageElement packageElement = (PackageElement) variableElement.getEnclosingElement().getEnclosingElement();
+
+            generateCode(classesToGenerate, typeElement, packageElement, navigatorClassType, variableElement);
         }
 
         for (Element annotatedElement : roundEnvironment.getElementsAnnotatedWith(BindRecyclerAdapter.class)) {
@@ -124,8 +110,28 @@ public class StaticLauncherProcessor extends AbstractProcessor {
             if (!isValidField(variableElement)) {
                 messager.error(variableElement,
                         "Field annotated with %s must have DEFAULT or PUBLIC access modifier, current is: ",
-                        BindRecyclerAdapter.class.getName());
+                        BindRecyclerAdapter.class.getSimpleName());
                 return true;
+            }
+
+            TypeElement recyclerAdapterClassType = verifyClassAnnotation(RecyclerAdapterClass.class, roundEnvironment, variableElement);
+
+            TypeElement typeElement = (TypeElement) variableElement.getEnclosingElement();
+            PackageElement packageElement = (PackageElement) variableElement.getEnclosingElement().getEnclosingElement();
+
+            generateCode(classesToGenerate, typeElement, packageElement, recyclerAdapterClassType, variableElement);
+        }
+
+        //Generate code for bindings
+        for (CodeGenerator generator: classesToGenerate.values()) {
+            TypeSpec typeSpec = generator.generateClass();
+
+            JavaFile javaFile = JavaFile.builder(generator.getPackageName(), typeSpec)
+                    .build();
+            try {
+                javaFile.writeTo(filer);
+            } catch (IOException e) {
+                throw new RuntimeException("Error writing file");
             }
         }
         return true;
@@ -136,13 +142,17 @@ public class StaticLauncherProcessor extends AbstractProcessor {
         return fieldValidator.isDefault() || fieldValidator.isPublic();
     }
 
-    private synchronized Map<String, String> isSingleMethodAnnotationInClass(
+    private Map<String, String> getAnnotatedMethodsForClasses (
             Class<? extends Annotation> annotation,
             RoundEnvironment roundEnvironment) {
         Map<String, String> methodsNameMap = new HashMap<>();
 
         for (Element onAttachElement: roundEnvironment.getElementsAnnotatedWith(annotation)) {
             ExecutableElement executableElement = (ExecutableElement) onAttachElement;
+
+            if (!executableElement.getModifiers().contains(Modifier.PUBLIC)) {
+                messager.error(executableElement, "Element annotated with @%s should be PUBLIC.", annotation.getSimpleName());
+            }
 
             TypeElement typeElement = (TypeElement) executableElement.getEnclosingElement();
             String clsName = typeElement.getQualifiedName().toString();
@@ -159,18 +169,57 @@ public class StaticLauncherProcessor extends AbstractProcessor {
         return methodsNameMap;
     }
 
-    private TypeSpec generateClasses(TypeElement typeElement,
-                                     String variableName,
-                                     TypeElement presenterClassType,
-                                     Map<String, String> methodMap) {
-        CodeGenerator codeGenerator = new CodeGenerator(typeElement);
-        codeGenerator.createOnAttachMethod(variableName,
-                methodMap.get(presenterClassType.getQualifiedName().toString()));
-        codeGenerator.createOnDetachMethod();
-        codeGenerator.createOnStartmethod();
-        codeGenerator.createOnStopMethod();
+    private TypeElement verifyClassAnnotation(Class<? extends Annotation> classAnnotation,
+                                              RoundEnvironment roundEnvironment,
+                                              VariableElement bindingField) {
+        TypeElement classType = null;
+        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(classAnnotation);
+        if (elements.size() > 1) messager.error(elements.iterator().next(), "Only single @%s annotation is allowed", classAnnotation.getSimpleName());
+        else if (elements.isEmpty()) messager.error(bindingField, "Annotate Base class with @%s annotation", classAnnotation.getSimpleName());
+        else {
+            classType = (TypeElement) elements.iterator().next();
+            messager.warn(classType, "Single annotation detected");
+        }
+        return classType;
+    }
 
-        return codeGenerator.generateClass(typeElement.asType());
+    private void generateCode(Map<String, CodeGenerator> classesToGenerate,
+                              TypeElement typeElement,
+                              PackageElement packageElement,
+                              TypeElement presenterClassType,
+                              VariableElement variableElement) {
+        CodeGenerator codeGenerator;
+        if (!classesToGenerate.containsKey(typeElement.toString())) {
+            codeGenerator = new CodeGenerator(typeElement, packageElement.getQualifiedName().toString());
+            codeGenerator.addConstructorParameter(typeElement.asType());
+            codeGenerator.addFieldToClass(typeElement.asType());
+        } else {
+            codeGenerator = classesToGenerate.get(typeElement.toString());
+        }
+
+        String presenterClassName = presenterClassType.getQualifiedName().toString();
+        String presenterVarName = variableElement.getSimpleName().toString();
+
+        String onAttachName = onAttachClassesToMethodsName.get(presenterClassName);
+        if (onAttachName != null) {
+            codeGenerator.addInvocationToOnAttach(presenterVarName, onAttachName);
+        }
+
+        String onDetachName = onDetachClassesToMethodsName.get(presenterClassName);
+        if (onDetachName != null) {
+            codeGenerator.addInvocationToOnDetach(presenterVarName, onDetachName);
+        }
+
+        String onStartName = onStartClassesToMethodsName.get(presenterClassName);
+        if (onStartName != null) {
+            codeGenerator.addInvocationToOnStart(presenterVarName, onStartName);
+        }
+
+        String onStopName = onStopClassesToMethodsName.get(presenterClassName);
+        if (onStopName != null) {
+            codeGenerator.addInvocationToOnStop(presenterVarName, onStopName);
+        }
+        classesToGenerate.put(typeElement.toString(), codeGenerator);
     }
 }
 

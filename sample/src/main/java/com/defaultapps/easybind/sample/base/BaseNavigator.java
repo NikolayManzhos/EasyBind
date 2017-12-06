@@ -1,6 +1,7 @@
 package com.defaultapps.easybind.sample.base;
 
 import com.defaultapps.easybind.NavigatorClass;
+import com.defaultapps.easybind.PresenterClass;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
 
