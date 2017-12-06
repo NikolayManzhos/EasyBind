@@ -7,12 +7,14 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.ClassName.get;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
@@ -29,17 +31,19 @@ final class CodeGenerator {
     private MethodSpec onStartMethodSpec;
     private MethodSpec onStopMethodSpec;
 
+    private final static String BINDING_NAME = "target";
+
     CodeGenerator(TypeElement annotatedClass) {
         this.annotatedClassName = annotatedClass.getSimpleName().toString();
         this.generatedClassName = annotatedClassName + CLASS_SUFFIX;
     }
 
-    TypeSpec generateClass(Class presenterClass, String variableName) {
+    TypeSpec generateClass(TypeMirror targetMirror) {
         TypeSpec.Builder builder = classBuilder(generatedClassName)
                 .addSuperinterface(EasyBinder.class)
                 .addModifiers(PUBLIC, FINAL)
-                .addField(presenterClass, variableName)
-                .addMethod(createConstructor(presenterClass, variableName))
+                .addField(TypeName.get(targetMirror), BINDING_NAME, PRIVATE, FINAL)
+                .addMethod(createConstructor(targetMirror))
                 .addMethod(onAttachMethodSpec)
                 .addMethod(onDetachMethodSpec)
                 .addMethod(onStartMethodSpec)
@@ -47,9 +51,12 @@ final class CodeGenerator {
         return builder.build();
     }
 
-    public void createOnAttachMethod() {
+    public void createOnAttachMethod(String variableName, String methodName) {
         onAttachMethodSpec = methodBuilder("onAttach")
                 .addModifiers(PUBLIC)
+                .addCode(BINDING_NAME + "."
+                        + variableName + "."
+                        + methodName + "(" + BINDING_NAME + ");\n")
                 .build();
     }
 
@@ -71,11 +78,11 @@ final class CodeGenerator {
                 .build();
     }
 
-    private MethodSpec createConstructor(Class presenterClass, String variableName) {
+    private MethodSpec createConstructor(TypeMirror presenterMirror) {
         return constructorBuilder()
                 .addModifiers(PUBLIC)
-                .addParameter(presenterClass, variableName)
-                .addStatement("this.$N = $N", variableName, variableName)
+                .addParameter(TypeName.get(presenterMirror), BINDING_NAME)
+                .addStatement("this.$N = $N", BINDING_NAME, BINDING_NAME)
                 .build();
     }
 }

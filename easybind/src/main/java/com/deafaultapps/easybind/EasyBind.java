@@ -13,7 +13,7 @@ public class EasyBind {
             Class<?> bindingClass= targetCls.getClassLoader().loadClass(clsName + "Binder");
             //noinspection unchecked
             Constructor<? extends EasyBinder> constructor
-                    = (Constructor<? extends EasyBinder>) bindingClass.getConstructor(Object.class );
+                    = (Constructor<? extends EasyBinder>) bindingClass.getConstructor(targetCls);
             return constructor.newInstance(target);
         } catch (InstantiationException e) {
             throw new RuntimeException(e);

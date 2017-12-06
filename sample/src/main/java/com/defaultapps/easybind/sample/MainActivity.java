@@ -17,7 +17,7 @@ public class MainActivity extends BaseActivity implements MainContract.MainView 
     Button activityButton;
 
     @BindPresenter
-    public MainContract.MainPresenter presenter = new MainPresenterImpl();
+    MainContract.MainPresenter presenter = new MainPresenterImpl();
 
     @BindNavigator
     public MainContract.MainNavigator navigator = new MainNavigatorImpl();
@@ -27,5 +27,6 @@ public class MainActivity extends BaseActivity implements MainContract.MainView 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        ((BasePresenter) presenter).getView();
     }
 }

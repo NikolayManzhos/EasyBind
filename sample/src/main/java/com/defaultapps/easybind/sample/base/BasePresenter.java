@@ -21,5 +21,7 @@ public abstract class BasePresenter<V extends MvpView> implements MvpPresenter<V
         view = null;
     }
 
-    public void onDetak() {}
+    public V getView() {
+        return view;
+    }
 }
