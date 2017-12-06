@@ -1,11 +1,15 @@
 package com.defaultapps.easybind;
 
+import com.deafaultapps.easybind.EasyBinder;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.TypeElement;
 
 import static com.squareup.javapoet.ClassName.get;
+import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -20,35 +24,58 @@ final class CodeGenerator {
     private final String annotatedClassName;
     private final String generatedClassName;
 
+    private MethodSpec onAttachMethodSpec;
+    private MethodSpec onDetachMethodSpec;
+    private MethodSpec onStartMethodSpec;
+    private MethodSpec onStopMethodSpec;
+
     CodeGenerator(TypeElement annotatedClass) {
         this.annotatedClassName = annotatedClass.getSimpleName().toString();
         this.generatedClassName = annotatedClassName + CLASS_SUFFIX;
     }
 
-    TypeSpec generateClass() {
-        return classBuilder(generatedClassName)
+    TypeSpec generateClass(Class presenterClass, String variableName) {
+        TypeSpec.Builder builder = classBuilder(generatedClassName)
+                .addSuperinterface(EasyBinder.class)
                 .addModifiers(PUBLIC, FINAL)
-                .addMethod(getIntent())
-                .addMethod(startActivity())
+                .addField(presenterClass, variableName)
+                .addMethod(createConstructor(presenterClass, variableName))
+                .addMethod(onAttachMethodSpec)
+                .addMethod(onDetachMethodSpec)
+                .addMethod(onStartMethodSpec)
+                .addMethod(onStopMethodSpec);
+        return builder.build();
+    }
+
+    public void createOnAttachMethod() {
+        onAttachMethodSpec = methodBuilder("onAttach")
+                .addModifiers(PUBLIC)
                 .build();
     }
 
-    private MethodSpec getIntent() {
-
-        ClassName intentClass = get("android.content", "Intent");
-        return methodBuilder("getIntent")
-                .addModifiers(PUBLIC, STATIC)
-                .addParameter(get("android.content", "Context"), "context")
-                .addStatement("return new $T(context, $L.class)", intentClass, annotatedClassName)
-                .returns(intentClass)
+    public void createOnDetachMethod() {
+        onDetachMethodSpec = methodBuilder("onDetach")
+                .addModifiers(PUBLIC)
                 .build();
     }
 
-    private MethodSpec startActivity() {
-        return methodBuilder("startActivity")
-                .addModifiers(PUBLIC, STATIC)
-                .addParameter(get("android.content", "Context"), "context")
-                .addStatement("context.startActivity(getIntent(context))")
+    public void createOnStartmethod() {
+        onStartMethodSpec = methodBuilder("onStart")
+                .addModifiers(PUBLIC)
+                .build();
+    }
+
+    public void createOnStopMethod() {
+        onStopMethodSpec = methodBuilder("onStop")
+                .addModifiers(PUBLIC)
+                .build();
+    }
+
+    private MethodSpec createConstructor(Class presenterClass, String variableName) {
+        return constructorBuilder()
+                .addModifiers(PUBLIC)
+                .addParameter(presenterClass, variableName)
+                .addStatement("this.$N = $N", variableName, variableName)
                 .build();
     }
 }

@@ -4,5 +4,6 @@ apply plugin: 'com.jfrog.bintray'
 dependencies {
     implementation 'com.squareup:javapoet:1.9.0'
     api project (':annotations')
+    api project (':easybind')
     compileOnly 'com.google.auto.service:auto-service:1.0-rc3'
 }

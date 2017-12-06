@@ -1,25 +1,23 @@
 package com.defaultapps.easybind.sample.base;
 
-import com.defaultapps.easybind.PresenterClass;
+import com.defaultapps.easybind.NavigatorClass;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
 
-@PresenterClass
-public abstract class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
+@NavigatorClass
+public class BaseNavigator<V extends MvpView> implements Navigator<V> {
 
     private V view;
 
     @Override
     @OnAttach
-    public void onAttach(V view) {
+    public void bind(V view) {
         this.view = view;
     }
 
     @Override
     @OnDetach
-    public void onDetach() {
+    public void unbind() {
         view = null;
     }
-
-    public void onDetak() {}
 }
