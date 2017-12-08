@@ -12,7 +12,7 @@ import com.defaultapps.easybind.bindings.BindLayout;
 public abstract class BaseActivity extends AppCompatActivity {
 
     @BindLayout
-    int layoutId;
+    public int layoutId;
 
     private EasyBinder easyBinder;
 

@@ -1,4 +1,4 @@
-package com.defaultapps.easybind.calls;
+package com.defaultapps.easybind;
 
 
 import java.lang.annotation.ElementType;

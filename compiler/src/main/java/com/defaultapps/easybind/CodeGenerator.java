@@ -55,6 +55,13 @@ final class CodeGenerator {
                         + methodName + "(" + BINDING_NAME + ");\n");
     }
 
+    void addVariableAssignmentOnAttach(String variableName, String setupValue) {
+        onAttachMethodSpec
+                .addCode(BINDING_NAME + "."
+                        + variableName + " = "
+                        + setupValue + ";\n");
+    }
+
     void addInvocationToOnDetach(String variableName, String methodName) {
         onDetachMethodSpec
                 .addCode(BINDING_NAME + "."

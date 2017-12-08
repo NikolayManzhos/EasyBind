@@ -5,13 +5,13 @@ import android.widget.Button;
 
 import com.defaultapps.easybind.bindings.BindNavigator;
 import com.defaultapps.easybind.bindings.BindPresenter;
-import com.defaultapps.easybind.calls.Layout;
+import com.defaultapps.easybind.Layout;
 import com.defaultapps.easybind.sample.R;
 import com.defaultapps.easybind.sample.base.BaseActivity;
 import com.defaultapps.easybind.sample.base.BasePresenter;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
+
 @Layout(id = R.layout.activity_main)
 public class MainActivity extends BaseActivity implements MainContract.MainView {
 
