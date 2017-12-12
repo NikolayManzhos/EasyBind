@@ -1,6 +1,6 @@
 package com.defaultapps.easybind;
 
-import com.deafaultapps.easybind.EasyBinder;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -18,6 +18,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 final class CodeGenerator {
 
     private static final String CLASS_SUFFIX = "Binder";
+    private static final String BINDER_PACKAGE = "com.deafaultapps.easybind";
+    private static final String BINDER_SIMPLE_NAME = "EasyBinder";
 
     private final String generatedClassName;
     private final String packageName;
@@ -115,7 +117,7 @@ final class CodeGenerator {
                 .addModifiers(PUBLIC);
 
         classTypeSpec = classBuilder(generatedClassName)
-                .addSuperinterface(EasyBinder.class)
+                .addSuperinterface(ClassName.get(BINDER_PACKAGE, BINDER_SIMPLE_NAME))
                 .addModifiers(PUBLIC, FINAL);
     }
 }
