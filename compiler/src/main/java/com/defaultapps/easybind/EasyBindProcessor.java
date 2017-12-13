@@ -3,7 +3,6 @@ package com.defaultapps.easybind;
 import com.defaultapps.easybind.bindings.BindLayout;
 import com.defaultapps.easybind.bindings.BindNavigator;
 import com.defaultapps.easybind.bindings.BindPresenter;
-import com.defaultapps.easybind.bindings.BindRecyclerAdapter;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
 import com.defaultapps.easybind.calls.OnStart;
@@ -66,7 +65,6 @@ public class EasyBindProcessor extends AbstractProcessor {
         Set<String> allowedAnnotations = new LinkedHashSet<>();
         allowedAnnotations.add(BindNavigator.class.getCanonicalName());
         allowedAnnotations.add(BindPresenter.class.getCanonicalName());
-        allowedAnnotations.add(BindRecyclerAdapter.class.getCanonicalName());
         allowedAnnotations.add(BindLayout.class.getCanonicalName());
         return allowedAnnotations;
     }
@@ -112,23 +110,6 @@ public class EasyBindProcessor extends AbstractProcessor {
             PackageElement packageElement = (PackageElement) variableElement.getEnclosingElement().getEnclosingElement();
 
             buildCodeGenerator(classesToGenerate, typeElement, packageElement, navigatorClassType, variableElement);
-        }
-
-        for (Element annotatedElement : roundEnvironment.getElementsAnnotatedWith(BindRecyclerAdapter.class)) {
-            VariableElement variableElement = (VariableElement) annotatedElement;
-            if (!isValidField(variableElement)) {
-                messager.error(variableElement,
-                        "Field annotated with %s must have DEFAULT or PUBLIC access modifier, current is: ",
-                        BindRecyclerAdapter.class.getSimpleName());
-                return true;
-            }
-
-            TypeElement recyclerAdapterClassType = verifyClassAnnotation(RecyclerAdapterClass.class, roundEnvironment, variableElement);
-
-            TypeElement typeElement = (TypeElement) variableElement.getEnclosingElement();
-            PackageElement packageElement = (PackageElement) variableElement.getEnclosingElement().getEnclosingElement();
-
-            buildCodeGenerator(classesToGenerate, typeElement, packageElement, recyclerAdapterClassType, variableElement);
         }
 
         for (Element annotatedElement: roundEnvironment.getElementsAnnotatedWith(Layout.class)) {
