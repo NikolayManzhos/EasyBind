@@ -20,6 +20,10 @@ final class CodeGenerator {
     private static final String CLASS_SUFFIX = "Binder";
     private static final String BINDER_PACKAGE = "com.deafaultapps.easybind";
     private static final String BINDER_SIMPLE_NAME = "EasyBinder";
+    private static final String ON_ATTACH_NAME = "onAttach";
+    private static final String ON_DETACH_NAME = "onDetach";
+    private static final String ON_START_NAME = "onStart";
+    private static final String ON_STOP_NAME = "onStop";
 
     private final String generatedClassName;
     private final String packageName;
@@ -101,16 +105,16 @@ final class CodeGenerator {
     }
 
     private void initBuilders() {
-        onAttachMethodSpec = methodBuilder("onAttach")
+        onAttachMethodSpec = methodBuilder(ON_ATTACH_NAME)
                 .addModifiers(PUBLIC);
 
-        onDetachMethodSpec = methodBuilder("onDetach")
+        onDetachMethodSpec = methodBuilder(ON_DETACH_NAME)
                 .addModifiers(PUBLIC);
 
-        onStartMethodSpec = methodBuilder("onStart")
+        onStartMethodSpec = methodBuilder(ON_START_NAME)
                 .addModifiers(PUBLIC);
 
-        onStopMethodSpec = methodBuilder("onStop")
+        onStopMethodSpec = methodBuilder(ON_STOP_NAME)
                 .addModifiers(PUBLIC);
 
         constructorMethodSpec = constructorBuilder()
