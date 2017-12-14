@@ -14,7 +14,7 @@ import com.defaultapps.easybind.sample.utis.ProxyActivity;
 import butterknife.BindView;
 import butterknife.OnClick;
 
-@Layout(id = R.layout.activity_main)
+@Layout(id = R.layout.activity_main, name = "MainActivity")
 public class MainActivity extends ProxyActivity implements MainContract.MainView {
 
     @BindView(R.id.activity_a)

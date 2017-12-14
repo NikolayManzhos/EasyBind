@@ -1,6 +1,7 @@
 package com.defaultapps.easybind;
 
 import com.defaultapps.easybind.bindings.BindLayout;
+import com.defaultapps.easybind.bindings.BindName;
 import com.defaultapps.easybind.bindings.BindNavigator;
 import com.defaultapps.easybind.bindings.BindPresenter;
 import com.defaultapps.easybind.calls.OnAttach;
@@ -45,7 +46,6 @@ public class EasyBindProcessor extends AbstractProcessor {
     private Map<String, String> onDetachClassesToMethodsName;
     private Map<String, String> onStartClassesToMethodsName;
     private Map<String, String> onStopClassesToMethodsName;
-    private Map<String, String> bindLayoutClassesToFieldsName;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -75,7 +75,8 @@ public class EasyBindProcessor extends AbstractProcessor {
         onDetachClassesToMethodsName = getAnnotatedMethodsForClasses(OnDetach.class, roundEnvironment);
         onStartClassesToMethodsName = getAnnotatedMethodsForClasses(OnStart.class, roundEnvironment);
         onStopClassesToMethodsName = getAnnotatedMethodsForClasses(OnStop.class, roundEnvironment);
-        bindLayoutClassesToFieldsName = getAnnotatedFieldsForClasses(BindLayout.class, roundEnvironment, TypeKind.INT);
+        Map<String, String> bindLayoutClassesToFieldsName = getAnnotatedFieldsForClasses(BindLayout.class, roundEnvironment, TypeKind.INT);
+        Map<String, String> bindNameClassesToFieldsName = getAnnotatedFieldsForClasses(BindName.class, roundEnvironment, TypeKind.DECLARED);
         Map<String, CodeGenerator> classesToGenerate = new HashMap<>();
 
         for (Element presenterBindingElement : roundEnvironment.getElementsAnnotatedWith(BindPresenter.class)) {
@@ -119,20 +120,23 @@ public class EasyBindProcessor extends AbstractProcessor {
             messager.warn(classTypeElement, "Element annotated with @Layout ", classTypeElement.getSimpleName());
 
             //Traverse all classes until we reach android or java packages
-            TypeElement inheritedClassType = classTypeElement;
-            while (true) {
-                if (isInSystemPackage(inheritedClassType)) {
-                    messager.error(inheritedClassType, "Unable to find class with @BindLayout field");
-                    break;
-                }
-                if (bindLayoutClassesToFieldsName.containsKey(inheritedClassType.getQualifiedName().toString())) {
-                    messager.warn(inheritedClassType, "Found BaseClass which contains @BindLayout");
-                    break;
-                }
-                inheritedClassType = (TypeElement) typeUtils.asElement(inheritedClassType.getSuperclass());
-            }
+            TypeElement inheritedClassTypeLayout = searchForTypeOfClass(classTypeElement, bindLayoutClassesToFieldsName);
+            TypeElement inheritedClassTypeName = searchForTypeOfClass(classTypeElement, bindNameClassesToFieldsName);
 
-            buildCodeGenerator(classesToGenerate, classTypeElement, packageElement, inheritedClassType, String.valueOf(layoutAnnotation.id()));
+            buildCodeGenerator(classesToGenerate,
+                    classTypeElement,
+                    packageElement,
+                    inheritedClassTypeLayout,
+                    String.valueOf(layoutAnnotation.id()),
+                    bindLayoutClassesToFieldsName);
+
+            String screenName = "\"" + layoutAnnotation.name() + "\"";
+            buildCodeGenerator(classesToGenerate,
+                    classTypeElement,
+                    packageElement,
+                    inheritedClassTypeName,
+                    screenName,
+                    bindNameClassesToFieldsName);
         }
 
         //Generate code for bindings
@@ -201,7 +205,7 @@ public class EasyBindProcessor extends AbstractProcessor {
                 messager.warn(typeElement, "Name is: %s", clsName);
                 TypeMirror variableType = variableElement.asType();
                 if (variableType.getKind() != fieldType) {
-                    messager.error(variableElement, "Field must be type of: %s", fieldType.name());
+                    messager.error(variableElement, "%1s, Field must be type of: %2s", variableType.getKind().toString(), fieldType.name());
                 }
                 fieldsNameMap.put(clsName, variableElement.getSimpleName().toString());
             } else {
@@ -271,7 +275,8 @@ public class EasyBindProcessor extends AbstractProcessor {
                                     TypeElement typeElement,
                                     PackageElement packageElement,
                                     TypeElement componentClassType,
-                                    String valueToAssign) {
+                                    String valueToAssign,
+                                    Map<String, String> bindingMap) {
         CodeGenerator codeGenerator;
         if (!classesToGenerate.containsKey(typeElement.toString())) {
             codeGenerator = new CodeGenerator(typeElement, packageElement.getQualifiedName().toString());
@@ -283,7 +288,7 @@ public class EasyBindProcessor extends AbstractProcessor {
 
         String componentClassName = componentClassType.getQualifiedName().toString();
 
-        String layoutIdFieldName = bindLayoutClassesToFieldsName.get(componentClassName);
+        String layoutIdFieldName = bindingMap.get(componentClassName);
         if (layoutIdFieldName != null) {
             codeGenerator.addVariableAssignmentOnAttach(layoutIdFieldName, valueToAssign);
         }
@@ -302,6 +307,20 @@ public class EasyBindProcessor extends AbstractProcessor {
             return true;
         }
         return false;
+    }
+
+    private TypeElement searchForTypeOfClass(TypeElement typeElement, Map<String, String> bindingMap) {
+        while (true) {
+            if (isInSystemPackage(typeElement)) {
+                messager.error(typeElement, "Unable to find class with @BindLayout field");
+            }
+            if (bindingMap.containsKey(typeElement.getQualifiedName().toString())) {
+                messager.warn(typeElement, "Found BaseClass which contains @BindLayout");
+                break;
+            }
+            typeElement = (TypeElement) typeUtils.asElement(typeElement.getSuperclass());
+        }
+        return typeElement;
     }
 }
 

@@ -4,15 +4,20 @@ package com.defaultapps.easybind.sample.base;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.deafaultapps.easybind.EasyBind;
 import com.deafaultapps.easybind.EasyBinder;
 import com.defaultapps.easybind.bindings.BindLayout;
+import com.defaultapps.easybind.bindings.BindName;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
     @BindLayout
     public int layoutId;
+
+    @BindName
+    public String screenName;
 
     private EasyBinder easyBinder;
 
@@ -22,6 +27,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         easyBinder = EasyBind.bind(this);
         easyBinder.onAttach();
         setContentView(layoutId);
+        Log.d("Activity", "ScreenName: " + screenName);
     }
 
     @Override

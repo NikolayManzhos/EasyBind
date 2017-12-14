@@ -11,11 +11,15 @@ import android.view.ViewGroup;
 import com.deafaultapps.easybind.EasyBind;
 import com.deafaultapps.easybind.EasyBinder;
 import com.defaultapps.easybind.bindings.BindLayout;
+import com.defaultapps.easybind.bindings.BindName;
 
 public class BaseFragment extends Fragment {
 
     @BindLayout
     public int layoutId;
+
+    @BindName
+    public String screenName;
 
     private EasyBinder easyBinder;
 
