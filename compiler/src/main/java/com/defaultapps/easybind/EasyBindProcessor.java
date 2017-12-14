@@ -38,6 +38,8 @@ import javax.lang.model.util.Types;
 @AutoService(Processor.class)
 public class EasyBindProcessor extends AbstractProcessor {
 
+    private static final boolean DEBUG = false;
+
     private final Messager messager = new Messager();
     private Filer filer;
     private Types typeUtils;
@@ -117,11 +119,11 @@ public class EasyBindProcessor extends AbstractProcessor {
             TypeElement classTypeElement = (TypeElement) annotatedElement;
             Layout layoutAnnotation = classTypeElement.getAnnotation(Layout.class);
             PackageElement packageElement = (PackageElement) classTypeElement.getEnclosingElement();
-            messager.warn(classTypeElement, "Element annotated with @Layout ", classTypeElement.getSimpleName());
+            if (DEBUG) messager.warn(classTypeElement, "Element annotated with @Layout ", classTypeElement.getSimpleName());
 
             //Traverse all classes until we reach android or java packages
-            TypeElement inheritedClassTypeLayout = searchForTypeOfClass(classTypeElement, bindLayoutClassesToFieldsName);
-            TypeElement inheritedClassTypeName = searchForTypeOfClass(classTypeElement, bindNameClassesToFieldsName);
+            TypeElement inheritedClassTypeLayout = searchForTypeOfClass(classTypeElement, bindLayoutClassesToFieldsName, true);
+            TypeElement inheritedClassTypeName = searchForTypeOfClass(classTypeElement, bindNameClassesToFieldsName, false);
 
             buildCodeGenerator(classesToGenerate,
                     classTypeElement,
@@ -130,6 +132,10 @@ public class EasyBindProcessor extends AbstractProcessor {
                     String.valueOf(layoutAnnotation.id()),
                     bindLayoutClassesToFieldsName);
 
+            //@BindName field not found finish generation
+            if (inheritedClassTypeName == null) {
+                break;
+            }
             String screenName = "\"" + layoutAnnotation.name() + "\"";
             buildCodeGenerator(classesToGenerate,
                     classTypeElement,
@@ -174,14 +180,14 @@ public class EasyBindProcessor extends AbstractProcessor {
             TypeElement typeElement = (TypeElement) executableElement.getEnclosingElement();
             String clsName = typeElement.getQualifiedName().toString();
             if (!methodsNameMap.containsKey(clsName)) {
-                messager.warn(typeElement, "Name is: %s", clsName);
+                if (DEBUG) messager.warn(typeElement, "Name is: %s", clsName);
                 methodsNameMap.put(clsName, executableElement.getSimpleName().toString());
             } else {
                 messager.error(executableElement,
                         "Multiple @%s not allowed in a single class",
                         annotation);
             }
-            messager.warn(executableElement, "%1s function name: %2s", annotation.getSimpleName(), executableElement.getSimpleName());
+            if (DEBUG) messager.warn(executableElement, "%1s function name: %2s", annotation.getSimpleName(), executableElement.getSimpleName());
         }
         return methodsNameMap;
     }
@@ -202,7 +208,7 @@ public class EasyBindProcessor extends AbstractProcessor {
             TypeElement typeElement = (TypeElement) variableElement.getEnclosingElement();
             String clsName = typeElement.getQualifiedName().toString();
             if (!fieldsNameMap.containsKey(clsName)) {
-                messager.warn(typeElement, "Name is: %s", clsName);
+                if (DEBUG) messager.warn(typeElement, "Name is: %s", clsName);
                 TypeMirror variableType = variableElement.asType();
                 if (variableType.getKind() != fieldType) {
                     messager.error(variableElement, "%1s, Field must be type of: %2s", variableType.getKind().toString(), fieldType.name());
@@ -213,7 +219,7 @@ public class EasyBindProcessor extends AbstractProcessor {
                         "Multiple @%s not allowed in a single class",
                         annotation);
             }
-            messager.warn(variableElement, "%1s function name: %2s", annotation.getSimpleName(), variableElement.getSimpleName());
+            if (DEBUG) messager.warn(variableElement, "%1s function name: %2s", annotation.getSimpleName(), variableElement.getSimpleName());
         }
         return fieldsNameMap;
     }
@@ -227,7 +233,7 @@ public class EasyBindProcessor extends AbstractProcessor {
         else if (elements.isEmpty()) messager.error(bindingField, "Annotate Base class with @%s annotation", classAnnotation.getSimpleName());
         else {
             classType = (TypeElement) elements.iterator().next();
-            messager.warn(classType, "Single annotation detected");
+            if (DEBUG) messager.warn(classType, "Single annotation detected");
         }
         return classType;
     }
@@ -299,23 +305,29 @@ public class EasyBindProcessor extends AbstractProcessor {
         String qualifiedName = element.getQualifiedName().toString();
 
         if (qualifiedName.startsWith("android.")) {
-            messager.warn(element, "Reached android. class");
+            if (DEBUG) messager.warn(element, "Reached android. class");
             return true;
         }
         if (qualifiedName.startsWith("java.")) {
-            messager.warn(element, "Reached java. class");
+            if (DEBUG) messager.warn(element, "Reached java. class");
             return true;
         }
         return false;
     }
 
-    private TypeElement searchForTypeOfClass(TypeElement typeElement, Map<String, String> bindingMap) {
+    private TypeElement searchForTypeOfClass(TypeElement typeElement,
+                                             Map<String, String> bindingMap,
+                                             boolean isStrict) {
         while (true) {
             if (isInSystemPackage(typeElement)) {
-                messager.error(typeElement, "Unable to find class with @BindLayout field");
+                if (isStrict) {
+                    messager.error(typeElement, "Unable to find class with @BindLayout field");
+                } else {
+                    return null;
+                }
             }
             if (bindingMap.containsKey(typeElement.getQualifiedName().toString())) {
-                messager.warn(typeElement, "Found BaseClass which contains @BindLayout");
+                if (DEBUG) messager.warn(typeElement, "Found BaseClass which contains @BindLayout");
                 break;
             }
             typeElement = (TypeElement) typeUtils.asElement(typeElement.getSuperclass());
