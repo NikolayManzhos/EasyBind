@@ -1,13 +1,15 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
 android {
     compileSdkVersion 27
 }
 
 dependencies {
-    api project (':annotations')
+    api project (':easybind-annotations')
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
+apply from: "$rootDir/upload.gradle"

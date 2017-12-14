@@ -9,7 +9,7 @@ android {
     minSdkVersion 15
     targetSdkVersion 27
     versionCode 1
-    versionName rootProject.publishVersion
+    versionName rootProject.releaseVersion
   }
 }
 
@@ -19,5 +19,5 @@ dependencies {
   annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
   implementation project(':easybind')
-  annotationProcessor project(':compiler')
+  annotationProcessor project(':easybind-compiler')
 }
