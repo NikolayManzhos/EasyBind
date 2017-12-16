@@ -19,9 +19,5 @@ allprojects {
 }
 
 ext {
-    userOrg = 'nikolaymanzhos'
-    groupId = 'com.defaultapps.easybind'
-    uploadName = 'EasyBind'
     releaseVersion = '1.0.0'
-    licences = ['MIT']
 }
