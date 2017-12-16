@@ -19,5 +19,5 @@ allprojects {
 }
 
 ext {
-    releaseVersion = '1.0.1'
+    releaseVersion = '1.0.2'
 }
