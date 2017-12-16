@@ -79,14 +79,14 @@ final class CodeGenerator {
         onStartMethodSpec
                 .addCode(BINDING_NAME + "."
                         + variableName + "."
-                        + methodName + "(" + BINDING_NAME + ");\n");
+                        + methodName + "();\n");
     }
 
     void addInvocationToOnStop(String variableName, String methodName) {
         onStopMethodSpec
                 .addCode(BINDING_NAME + "."
                         + variableName + "."
-                        + methodName + "(" + BINDING_NAME + ");\n");
+                        + methodName + "();\n");
     }
 
     void addConstructorParameter(TypeMirror bindingMirror) {

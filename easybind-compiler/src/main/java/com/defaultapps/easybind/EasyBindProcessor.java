@@ -134,7 +134,7 @@ public class EasyBindProcessor extends AbstractProcessor {
 
             //@BindName field not found finish generation
             if (inheritedClassTypeName == null) {
-                break;
+                continue;
             }
             String screenName = "\"" + layoutAnnotation.name() + "\"";
             buildCodeGenerator(classesToGenerate,
