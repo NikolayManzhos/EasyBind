@@ -22,6 +22,9 @@ public class EasyBind {
         Class<?> targetCls = target.getClass();
         Constructor<? extends EasyBinder> constructor = findClassConstructor(targetCls);
         //noinspection TryWithIdenticalCatches
+        if (constructor == null) {
+            return EasyBinder.EMPTY;
+        }
         try {
             return constructor.newInstance(target);
         } catch (InstantiationException e) {
@@ -48,7 +51,8 @@ public class EasyBind {
                 bindingConstructor = (Constructor<? extends EasyBinder>) bindingClass.getConstructor(cls);
                 BINDINGS.put(cls, bindingConstructor);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                if (DEBUG) Log.d(TAG, "Constructor not found");
+                return null;
             } catch (NoSuchMethodException e) {
                 throw new RuntimeException(e);
             }

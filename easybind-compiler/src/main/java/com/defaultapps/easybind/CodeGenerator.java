@@ -24,6 +24,7 @@ final class CodeGenerator {
     private static final String ON_DETACH_NAME = "onDetach";
     private static final String ON_START_NAME = "onStart";
     private static final String ON_STOP_NAME = "onStop";
+    private static final String ON_DISPOSE_NAME = "onDispose";
 
     private final String generatedClassName;
     private final String packageName;
@@ -35,6 +36,7 @@ final class CodeGenerator {
     private MethodSpec.Builder onDetachMethodSpec;
     private MethodSpec.Builder onStartMethodSpec;
     private MethodSpec.Builder onStopMethodSpec;
+    private MethodSpec.Builder onDisposeMethodSpec;
 
     private final static String BINDING_NAME = "target";
 
@@ -51,6 +53,7 @@ final class CodeGenerator {
         if (onDetachMethodSpec != null) classTypeSpec.addMethod(onDetachMethodSpec.build());
         if (onStartMethodSpec != null) classTypeSpec.addMethod(onStartMethodSpec.build());
         if (onStopMethodSpec != null) classTypeSpec.addMethod(onStopMethodSpec.build());
+        if (onDisposeMethodSpec != null) classTypeSpec.addMethod(onDisposeMethodSpec.build());
         return classTypeSpec.build();
     }
 
@@ -89,6 +92,12 @@ final class CodeGenerator {
                         + methodName + "();\n");
     }
 
+    void addInvocationToOnDispose(String variableName, String methodName) {
+        onDisposeMethodSpec
+                .addCode(BINDING_NAME + "."
+                        + variableName + "."
+                        + methodName + "();\n");
+    }
     void addConstructorParameter(TypeMirror bindingMirror) {
         constructorMethodSpec
                 .addParameter(TypeName.get(bindingMirror), BINDING_NAME)
@@ -115,6 +124,9 @@ final class CodeGenerator {
                 .addModifiers(PUBLIC);
 
         onStopMethodSpec = methodBuilder(ON_STOP_NAME)
+                .addModifiers(PUBLIC);
+
+        onDisposeMethodSpec = methodBuilder(ON_DISPOSE_NAME)
                 .addModifiers(PUBLIC);
 
         constructorMethodSpec = constructorBuilder()

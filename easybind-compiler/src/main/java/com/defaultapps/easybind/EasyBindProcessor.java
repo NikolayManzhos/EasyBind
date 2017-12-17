@@ -6,6 +6,7 @@ import com.defaultapps.easybind.bindings.BindNavigator;
 import com.defaultapps.easybind.bindings.BindPresenter;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
+import com.defaultapps.easybind.calls.OnDispose;
 import com.defaultapps.easybind.calls.OnStart;
 import com.defaultapps.easybind.calls.OnStop;
 import com.google.auto.service.AutoService;
@@ -48,6 +49,7 @@ public class EasyBindProcessor extends AbstractProcessor {
     private Map<String, String> onDetachClassesToMethodsName;
     private Map<String, String> onStartClassesToMethodsName;
     private Map<String, String> onStopClassesToMethodsName;
+    private Map<String, String> onDisposeClassesToMethodsName;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -77,6 +79,7 @@ public class EasyBindProcessor extends AbstractProcessor {
         onDetachClassesToMethodsName = getAnnotatedMethodsForClasses(OnDetach.class, roundEnvironment);
         onStartClassesToMethodsName = getAnnotatedMethodsForClasses(OnStart.class, roundEnvironment);
         onStopClassesToMethodsName = getAnnotatedMethodsForClasses(OnStop.class, roundEnvironment);
+        onDisposeClassesToMethodsName = getAnnotatedMethodsForClasses(OnDispose.class, roundEnvironment);
         Map<String, String> bindLayoutClassesToFieldsName = getAnnotatedFieldsForClasses(BindLayout.class, roundEnvironment, TypeKind.INT);
         Map<String, String> bindNameClassesToFieldsName = getAnnotatedFieldsForClasses(BindName.class, roundEnvironment, TypeKind.DECLARED);
         Map<String, CodeGenerator> classesToGenerate = new HashMap<>();
@@ -274,6 +277,12 @@ public class EasyBindProcessor extends AbstractProcessor {
         if (onStopName != null) {
             codeGenerator.addInvocationToOnStop(componentVarName, onStopName);
         }
+
+        String onDisposeName = onDisposeClassesToMethodsName.get(componentClassName);
+        if (onDisposeName != null) {
+            codeGenerator.addInvocationToOnDispose(componentVarName, onDisposeName);
+        }
+
         classesToGenerate.put(typeElement.toString(), codeGenerator);
     }
 
