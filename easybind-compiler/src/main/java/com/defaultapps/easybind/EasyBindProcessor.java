@@ -305,7 +305,7 @@ public class EasyBindProcessor extends AbstractProcessor {
 
         String layoutIdFieldName = bindingMap.get(componentClassName);
         if (layoutIdFieldName != null) {
-            codeGenerator.addVariableAssignmentOnAttach(layoutIdFieldName, valueToAssign);
+            codeGenerator.addVariableAssignmentToConstructor(layoutIdFieldName, valueToAssign);
         }
         classesToGenerate.put(typeElement.toString(), codeGenerator);
     }

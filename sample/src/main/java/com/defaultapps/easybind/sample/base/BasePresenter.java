@@ -4,6 +4,8 @@ import com.defaultapps.easybind.PresenterClass;
 import com.defaultapps.easybind.calls.OnAttach;
 import com.defaultapps.easybind.calls.OnDetach;
 import com.defaultapps.easybind.calls.OnDispose;
+import com.defaultapps.easybind.calls.OnStart;
+import com.defaultapps.easybind.calls.OnStop;
 
 @PresenterClass
 public abstract class BasePresenter<V extends MvpView> implements MvpPresenter<V> {

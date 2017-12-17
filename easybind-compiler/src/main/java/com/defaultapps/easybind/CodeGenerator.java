@@ -64,13 +64,6 @@ final class CodeGenerator {
                         + methodName + "(" + BINDING_NAME + ");\n");
     }
 
-    void addVariableAssignmentOnAttach(String variableName, String setupValue) {
-        onAttachMethodSpec
-                .addCode(BINDING_NAME + "."
-                        + variableName + " = "
-                        + setupValue + ";\n");
-    }
-
     void addInvocationToOnDetach(String variableName, String methodName) {
         onDetachMethodSpec
                 .addCode(BINDING_NAME + "."
@@ -98,10 +91,16 @@ final class CodeGenerator {
                         + variableName + "."
                         + methodName + "();\n");
     }
+
     void addConstructorParameter(TypeMirror bindingMirror) {
         constructorMethodSpec
                 .addParameter(TypeName.get(bindingMirror), BINDING_NAME)
                 .addStatement("this.$N = $N", BINDING_NAME, BINDING_NAME);
+    }
+
+    void addVariableAssignmentToConstructor(String variableName, String variableValue) {
+        constructorMethodSpec
+                .addStatement("this.$N.$L = $N", BINDING_NAME, variableName, variableValue);
     }
 
     void addFieldToClass(TypeMirror targetMirror) {
