@@ -5,6 +5,7 @@ public interface EasyBinder {
     void onDetach();
     void onStop();
     void onStart();
+    void onDispose();
 
     EasyBinder EMPTY = new EasyBinder() {
         @Override
@@ -15,5 +16,7 @@ public interface EasyBinder {
         public void onStop() {}
         @Override
         public void onStart() {}
+        @Override
+        public void onDispose() {}
     };
 }

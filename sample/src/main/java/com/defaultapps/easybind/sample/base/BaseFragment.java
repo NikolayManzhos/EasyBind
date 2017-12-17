@@ -23,8 +23,12 @@ public class BaseFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         easyBinder = EasyBind.bind(this);
-        easyBinder.onAttach();
         return inflater.inflate(layoutId, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        easyBinder.onAttach();
     }
 
     @Override
