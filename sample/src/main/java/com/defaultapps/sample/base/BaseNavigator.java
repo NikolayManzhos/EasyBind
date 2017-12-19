@@ -1,9 +1,9 @@
 package com.defaultapps.sample.base;
 
-import com.defaultapps.easybind.NavigatorClass;
-import com.defaultapps.easybind.PresenterClass;
-import com.defaultapps.easybind.calls.OnAttach;
-import com.defaultapps.easybind.calls.OnDetach;
+
+import easybind.NavigatorClass;
+import easybind.calls.OnAttach;
+import easybind.calls.OnDetach;
 
 @NavigatorClass
 public class BaseNavigator<V extends MvpView> implements Navigator<V> {

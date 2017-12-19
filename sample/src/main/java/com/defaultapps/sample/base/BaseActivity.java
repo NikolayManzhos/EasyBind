@@ -6,11 +6,11 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.defaultapps.easybind.bindings.BindLayout;
-import com.defaultapps.easybind.bindings.BindName;
 
 import easybind.EasyBind;
 import easybind.EasyBinder;
+import easybind.bindings.BindLayout;
+import easybind.bindings.BindName;
 
 public abstract class BaseActivity extends AppCompatActivity {
 

@@ -8,10 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.defaultapps.easybind.bindings.BindLayout;
-
 import easybind.EasyBind;
 import easybind.EasyBinder;
+import easybind.bindings.BindLayout;
 
 public class BaseFragment extends Fragment {
 
