@@ -1,23 +1,31 @@
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 27
-  buildToolsVersion '27.0.0'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.0'
 
-  defaultConfig {
-    applicationId 'com.defaultapps.easybind.sample'
-    minSdkVersion 15
-    targetSdkVersion 27
-    versionCode 1
-    versionName rootProject.releaseVersion
-  }
+    defaultConfig {
+        applicationId 'com.defaultapps.sample'
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName rootProject.releaseVersion
+        buildTypes {
+            debug {
+                debuggable false
+                minifyEnabled true
+                shrinkResources true
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        }
+    }
 }
 
 dependencies {
-  implementation 'com.android.support:appcompat-v7:27.0.2'
-  implementation 'com.jakewharton:butterknife:8.8.1'
-  annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation 'com.android.support:appcompat-v7:27.0.2'
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
-  implementation project(':easybind')
-  annotationProcessor project(':easybind-compiler')
+    implementation project(':easybind')
+    annotationProcessor project(':easybind-compiler')
 }
