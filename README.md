@@ -2,8 +2,8 @@
 
 Bind your Presenters, Navigators, Layout with ease.
 
-Warning. Project in very early development stage. Api us subject to change.
-See sample for usage example.
+Warning. Project in very early development stage. API is subject to change.
+Checkout sample for usage example.
 
 ## Gradle
 ```gradle
