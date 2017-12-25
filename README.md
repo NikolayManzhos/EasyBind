@@ -16,4 +16,5 @@ allprojects {
 
 ```gradle
 implementation "com.nikolaymanzhos:easybind:1.1.5"
+annotationProcessor "com.nikolaymanzhos:easybind-compiler:1.1.5"
 ```
