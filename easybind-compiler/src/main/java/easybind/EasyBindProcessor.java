@@ -77,11 +77,11 @@ public class EasyBindProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        onAttachClassesToMethodsName = getAnnotatedMethodsForClasses(OnAttach.class, roundEnvironment);
-        onDetachClassesToMethodsName = getAnnotatedMethodsForClasses(OnDetach.class, roundEnvironment);
-        onStartClassesToMethodsName = getAnnotatedMethodsForClasses(OnStart.class, roundEnvironment);
-        onStopClassesToMethodsName = getAnnotatedMethodsForClasses(OnStop.class, roundEnvironment);
-        onDisposeClassesToMethodsName = getAnnotatedMethodsForClasses(OnDispose.class, roundEnvironment);
+        onAttachClassesToMethodsName = getAnnotatedMethodsForClasses(OnAttach.class, roundEnvironment, true);
+        onDetachClassesToMethodsName = getAnnotatedMethodsForClasses(OnDetach.class, roundEnvironment, true);
+        onStartClassesToMethodsName = getAnnotatedMethodsForClasses(OnStart.class, roundEnvironment, false);
+        onStopClassesToMethodsName = getAnnotatedMethodsForClasses(OnStop.class, roundEnvironment, false);
+        onDisposeClassesToMethodsName = getAnnotatedMethodsForClasses(OnDispose.class, roundEnvironment, false);
         Map<String, String> bindLayoutClassesToFieldsName = getAnnotatedFieldsForClasses(BindLayout.class, roundEnvironment, TypeKind.INT);
         Map<String, String> bindNameClassesToFieldsName = getAnnotatedFieldsForClasses(BindName.class, roundEnvironment, TypeKind.DECLARED);
         Map<String, CodeGenerator> classesToGenerate = new HashMap<>();
@@ -92,7 +92,6 @@ public class EasyBindProcessor extends AbstractProcessor {
                 messager.error(variableElement,
                         "Field annotated with %s must have DEFAULT or PUBLIC access modifier, current is: ",
                         BindPresenter.class.getSimpleName());
-                return true;
             }
 
             TypeElement presenterClassType = verifyClassAnnotation(PresenterClass.class, roundEnvironment, variableElement);
@@ -172,7 +171,8 @@ public class EasyBindProcessor extends AbstractProcessor {
 
     private Map<String, String> getAnnotatedMethodsForClasses (
             Class<? extends Annotation> annotation,
-            RoundEnvironment roundEnvironment) {
+            RoundEnvironment roundEnvironment,
+            boolean hasSingleParam) {
         Map<String, String> methodsNameMap = new HashMap<>();
 
         for (Element element: roundEnvironment.getElementsAnnotatedWith(annotation)) {
@@ -180,6 +180,17 @@ public class EasyBindProcessor extends AbstractProcessor {
 
             if (!executableElement.getModifiers().contains(Modifier.PUBLIC)) {
                 messager.error(executableElement, "Element annotated with @%s should be PUBLIC.", annotation.getSimpleName());
+            }
+
+            int paramsCount = executableElement.getParameters().size();
+            if (hasSingleParam) {
+                if (paramsCount > 1) {
+                    messager.error(executableElement, "This function must have single parameter.");
+                }
+            } else {
+                if (paramsCount != 0) {
+                    messager.error(executableElement, "This function must have zero parameters.");
+                }
             }
 
             TypeElement typeElement = (TypeElement) executableElement.getEnclosingElement();
@@ -222,7 +233,7 @@ public class EasyBindProcessor extends AbstractProcessor {
             } else {
                 messager.error(variableElement,
                         "Multiple @%s not allowed in a single class",
-                        annotation);
+                        annotation.getSimpleName());
             }
             if (DEBUG) messager.warn(variableElement, "%1s function name: %2s", annotation.getSimpleName(), variableElement.getSimpleName());
         }
